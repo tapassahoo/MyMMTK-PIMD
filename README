@@ -1,0 +1,157 @@
+___________________
+                   |
+Executive Summary  |
+___________________|
+
+This directory was created with the intent of simulating N water molecules in a nanotube of length L. The nanotubes dimensions are such that the water molecules are confined in 1D because there
+us little to no room to move in the yz plane. The simulations are performed using MMTK and its builtin software. Benefits of MMTK include the ability to visualize molecular movements using VMD,
+and of course the generated trajectories which have stored each of the particles positions over time. 
+___________________
+                   |
+Summary            |
+___________________|
+
+We are simulating this system using the PIMC and PIMD sampling techniques.
+
+PIMC is used to rotate the water molecules around their centre of mass by randomly changing the value of each of the water's Euler Angles, and accepting proposed 
+rotations based on whether ((rho_new/rho_old)*exp(-(beta/P)*(pot_new - pot_old))) is greater than a random number generated between 0 and 1. 
+
+PIMD is used to translate the molecules according to the equation of motion F = -grad(U), where we know F is dp/dt, and dp is simply m dv, so we cam isolate dv
+so we can update the velocity v += dv. 
+
+While simple in concept, the drive for efficiency makes what could be a simple set of nested for loops in a python script a more challenging task, involving using cython coding 
+language for the integrator, then a compiler to convert the integrator script into machine code for maximum efficiency. This slows down the debugging process slightly but speeds 
+up the rate at which we can perform simulation steps 10 fold. The potential files are written in c++, also for efficiency reasons, and are compiled into .so files like the integrator. 
+___________________
+                   |
+File Descriptions  |
+___________________|
+
+Here's a little summary of the files and their purpose. 
+___________________
+                   |
+SimStart Files     |
+___________________|
+
+These types of files import our integrator files and potential files, initialize particle trajectories and simulation parameters, and then perform analysis using the output trajectories. All thses SimStart scripts
+are roughly identical with the only differences being the integrators commented out, the potential used, and the name of the trajectory .nc files and the analysis files.
+ 
+ASimStart   --> The most basic of start scripts, runs RotOnly integrator with the NoPot potential, which you might have guessed, has U = 0 and grad(U) = 0 for all r. Purpose is to compare Trot in MoRiBS to Trot our MMTK code.
+TSimStart   --> Runs the H20Rigid3DRotor integrator with the NoPot potential, which should generate trivial energies for the translation and rotation. Erot from TSimStart should match Erot from ASimStart.
+FSimStart   --> Runs the RotOnly integrator with dipole-dipole interaction potential. Is meant to compare H = Trot + Vdip between MoRiBS and MMTK.
+DSimStart   --> Runs the RotOnly integrator with a strong electric field. Is meant to compare H = Trot + mu*Efield between MoRiBS and MMTK.
+MSimStart   --> Runs the RotOnly integrator with a moderate electric field (outputs a potential energy on the order of the rotational energy). Is meant to compare H = Trot + mu*Efield between MoRiBS and MMTK.
+XSimStart   --> TBD
+YSimStart   --> TBD
+ZSimStart   --> TBD
+PolSimStart --> This file is the most distinct from the other files. It uses the most accurate and advanced potential we have in our arsenal MBPol (and yes its more advanced than AMBER 94). It works for many bodies N molecules,
+                doesn't make inaccurate assumptions like the dipole-dipole interaction potential does, and also takes into account polarizability of the molecules. The code is a blackbox code that takes certain parameters as 
+                inputs and outputs an energy and gradient for an output.* 
+___________________
+                   |
+MMTK and FF Files  |
+___________________|
+
+I didn't decide the naming convention I just went with it. Il be honest I don't know why we need 2 files to evaluate a potential, its probably for efficiency reasons or something. If I haven't updated this and someone is reading 
+this and has a better understanding than me please let me know.
+
+The MMTK files actually contain the mathematical statement for the potential and gradient, where the FF files call on that file so that the integrator may use them or something like that. They each have a corresponding .so file
+which is just the compiled version for that .c file. Here's the summary your waiting for;
+
+MMTK_NoPot.c          -->  U = 0 and grad(U) = 0.
+MMTK_LJ.c             -->  Google LJ potential
+MMTK_dipole.c         -->  Most google searches for this are wrong... its sad yeah I know. 
+MMTK_HarmonicWell.c   -->  1/2 k x^2, basic harmonic oscillator potential.
+MMTK_electricfield.c  -->  simply mu*Efield*cos(theta), where theta is the angle between the efield and the dipole moment. 
+
+Each have their associated FF.py file.
+
+NoPotFF.py            -->  Corresponds to MMTK_NoPot.so
+LJFF.py               -->  Corresponds to MMTK_LJ.so
+dipoleFF.py           -->  Corresponds to MMTK_dipole.so
+HarmonicWellFF.py     -->  Corresponds to MMTK_HarmonicWell.so
+electricfieldFF.py    -->  Corresponds to MMTK_electricfield.so
+___________________
+                   |
+setup files        |
+___________________|
+
+To me this is trivial, but for visualization purposes I will list them out. The setup files are called using pydev setup_FILENAME build_ext --inplace, and generate compiled versions for these files for efficiency reasons;
+
+setup_dipole.py                                   -->  Compiles MMTK_dipole.c into corresponding .so file 
+setup_electricfield.py                            -->  Compiles MMTK_electricfield.c into corresponding .so file 
+setup_H20Rigid3dRotor_PINormalModeIntegrator.py   -->  Compiles H20Rigid3dRotor_PINormalModeIntegrator.pyx into H20Rigid3dRotor_PINormalModeIntegrator.c H20Rigid3dRotor_PINormalModeIntegrator.so
+setup_HarmonicWell.py                             -->  Compiles MMTK_HarmonicWell.c into corresponding .so file
+setup_mbpol.py                                    -->  Compiles...
+setup_NoPot.py                                    -->  Compiles MMTK_NoPot.c into corresponding .so file
+setup_RotOnly_PINormalModeIntegrator.py           -->  Compiles RotOnlyPINormalModeIntegrator.pyx into corresponding RotOnly_PINormalModeIntegrator.c file and RotOnly_PINormalModeIntegrator.so file
+
+STILL GOTTA DO INTEGRATOR FILES, submitscript files, density matrix files, and analysis files.
+___________________
+                   |
+exact energy files |
+___________________|
+
+These files are meant to calculate the exact solution to the Schrodinger Equation, specifically its energy eigenvalues.
+
+exact-H2O-in-Efield.py             -->  Calculates the exact energies for a perturbed asymmetric top
+exact-HF-in-Efield.py              -->  Calculates the exact energies for a perturbed linear rotor
+exact-linear.py                    -->  Calculates the exact energies for a perturbed linear rotor 
+exact_rot_energy_calculator.py     -->  Calculates the exact energies for a rotational system
+___________________
+                   |
+integrator files   |
+___________________|
+
+There are two files, one for systems with rotation only (the one with RotOnly in its name),
+and another for systems which include both rotation and translational motion (the H20RigidRotor one).
+Each of them come with 2 additional files (with the same name but ending in .c or .so) that pop up after compiling.
+
+RotOnlyPINormalModeIntegrator.pyx             -->  This system can (as of me writing this 16/07/2018) correctly compute
+RotOnlyPINormalModeIntegrator.c               -->  the rotational energies given inputs of (correct) density matricies, 
+RotOnlyPINormalModeIntegrator.so              -->  however there still are difficulties
+
+H20Rigid3DRotor_PINormalModeIntegrator.pyx    -->  This code is mostly the same as the rotation only code, however,
+H20Rigid3DRotor_PINormalModeIntegrator.c      -->  it contains additional code to perform translation as well. This
+H20Rigid3DRotor_PINormalModeIntegrator.so     -->  code only performs rotation once every (RotSkip) number of steps.
+___________________
+                   |
+submitscript files |
+___________________|
+
+These files compliment the SimStart files because they basically just submit jobs to the queue, the files contain what 
+is necessary to submit a file (i.e. the FILENAME.py and the arguments argv[1], argv[2], ... , argv[N]).
+ 
+submitscriptA.sh  --> submits ASimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+submitscriptD.sh  --> submits DSimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+submitscriptF.sh  --> submits FSimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+submitscriptM.sh  --> submits MSimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+submitscriptP.sh  --> submits PSimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+submitscriptT.sh  --> submits TSimStart with rhoden, erotden, esqden, rotstep, and rotskip arguments
+___________________
+                   |
+analysis files     |
+___________________|
+
+Each of these files are used in some way to plot some output file generated from one of the SimStart files (because the
+SimStart files themselves each have their own code to generate output files from trajectories).
+
+CThetavsN.py
+histograph.py
+histographN.py
+plotstuff.sh
+____________________
+                    |
+special mbpol files |
+____________________|
+
+idk what these do yet (16/07/2018).
+
+build*              -->  technically a trajectory, idk what it does
+liam*               -->  technically a trajectory, idk what it does
+mbpol_eval.pyx      -->  idk
+mbpol_eval.cpp      -->  idk
+mbpol_eval.so       -->  idk
+mbpol.py            -->  idk
+mbpol.pyc           -->  idk
+run.py              -->  idk

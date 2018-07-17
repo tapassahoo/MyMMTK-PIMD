@@ -1,0 +1,57 @@
+Summary of trajectory_P4
+
+
+Purpose:
+
+This folder contains 8 simulation trajectories each run for 1 000 000 steps with 4 beads. The temperatures in these simulations 
+are; 10, 20, 50, 100, 150, 200, and 300 Kelvin. This data was initially used to study the rotational energy of a rot-only
+system to determine if the rotational energy scaled linearly with temperature like it did for our exact solution (Erot = f/2kBT).
+
+
+Aside: 
+
+In our simulation we decide whether or not to accept or reject a rotational step based on the values of the previous and 
+propsed density matricies as well as the change in potential:
+
+accept if --> (dens_new/dens_old)*exp(-beta*(pot_new - pot_old) > rand[0, 1].
+
+There is no potential 'turned on' in our potential-less rot-only system, so exp(-beta*(pot_new - pot_old)) = 1, and the 
+condition becomes:
+
+accept if --> (dens_new/dens_old) > rand[0, 1].
+
+We can conclude that (if normalized!) we can use the values of the density matricies as weights in our weighted sum. In statistical 
+mechanics the rotational contribution to the internal energy is calculated as follows:
+
+
+Method: 
+
+The exact answer was obtained from the MoRiBS code which serves as our benchmark.
+
+In our code it is calculated as:
+
+sum of [dens*energy/Z], where Z is the sum of all values in the rotational density matrix.
+                                                                                                                
+This value was compared to the Erot obtained from the simulations (i.e. the .nc files in this directory) using test-pimd-energy_analysis.py.
+This simulation code requires a density matrix to propose a new rotational step and each density matrix has its associated rotational 
+energy value which we have precalculated in a file H2OT##P##_eng. The trajectory stores all the density matricies and associated energy
+values over all of its steps. The test-pimd-energy_analysis.py file simply takes the sum of all the energy values in a trajectory and 
+divides by the number of steps to obtain the average internal energy of the system. 
+
+
+Results:
+
+You can view the comparisons of the Erot vs T plots between the exact solutions and the simulations with various step sizes by
+running the Plot_ErotvsT.py file using the P4_Rotational_Energies.py file as an argument in order to plot the curves. 
+P4_Rotational_Energies.py contains all the results from the exact solutions and the simulations if you are curious and want to see them.
+
+
+Follow Up:
+
+The better_trajectory_files folder contains the trajectories that have reasonable acceptance ratios, and are in good agreement with the 
+exact values. It is recommended to use better_P4_Rotational_Energies as the argument for Plot_ErotvsT.py plotting file. 
+
+
+Additional Notes: 
+
+The exact_rot_energy_calculator.py file directly calculates <Erot> from first principles by summing over all states.  

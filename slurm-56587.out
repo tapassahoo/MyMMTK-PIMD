@@ -1,0 +1,13 @@
+============================================================
+running job 'submitscriptP.sh' (56587)
+on node 'cpu001' in partition 'serial'
+on cluster 'nlogn'
+as 'l2mcgrat' (10017)
+============================================================
+Acceptance Ratio:  0.49405
+We're going to run the Langevin integrator for  10000.0 independent steps of PIMD
+Acceptance Ratio:  0.4887
+Traceback (most recent call last):
+  File "PolSimStart.py", line 180, in <module>
+    # Remove global translation every 50 steps.
+TypeError: exceptions must be old-style classes or derived from BaseException, not tuple
