@@ -31,7 +31,7 @@ from HarmonicWellFF import HarmonicWellForceField
 #####################################
 
 label = "Dip"
-outdir = "/work/tapas/trajectoryfiles/"
+outdir = "/work/tapas/Trajectory/"
 
 # Parameters
 rhoname = argv[1]
@@ -42,10 +42,8 @@ Rot_Step = argv[4] #Rot Step
 Rot_Skip = argv[5] #Rot Skip Step
 
 temperature = float(rhoname[rhoname.find("T")+1:rhoname.find("t")])*Units.K
-print(temperature)
-exit()
 P = int(rhoname[rhoname.find("t")+1:rhoname.find(".rho")])
-numsteps = 1000
+numsteps = 10
 
 lattice_spacing = 6.0*Units.Ang
 
@@ -131,9 +129,9 @@ universe.writeToFile("u.pdb")
 #universe._changed(True)
 universe.initializeVelocitiesToTemperature(temperature)
 
-rhofile=open(rhoname,"r")
-erotfile=open(erotname, "r")
-esqfile=open(esqname, "r")
+rhofile=open("RotationalDensityMatrices/"+rhoname,"r")
+erotfile=open("RotationalDensityMatrices/"+erotname, "r")
+esqfile=open("RotationalDensityMatrices/"+esqname, "r")
 
 for i in range(ndens):
         denrho[i]=float(rhofile.readline())
@@ -162,6 +160,10 @@ integrator = RotOnly3D_PILangevinNormalModeIntegrator(universe, delta_t = dt, ce
 
 RunSteps = int(numsteps)*Units.fs/dt
 SkipSteps = 1.0*Units.fs/dt
+print(natoms)
+#exit()
+
+print outdir+"N"+str(nmolecules)+"H20T"+str(temperature)+"P"+str(P)+"R"+str(lattice_spacing)+"FilEAVersion"+str(numsteps)+"Steps"+label+".nc"
 
 trajectory = Trajectory(universe, outdir+"N"+str(nmolecules)+"H20T"+str(temperature)+"P"+str(P)+"R"+str(lattice_spacing)+"FilEAVersion"+str(numsteps)+"Steps"+label+".nc", "w", "A simple test case")
 
@@ -179,7 +181,7 @@ integrator(steps=RunSteps,
 						 "configuration", "auxiliary"),
                                     0, None, SkipSteps)])
 
-raise()
+#raise()
 ##############################              BEGIN ANALYSIS           ##############################
 #gradientTest(universe)
 
@@ -280,16 +282,19 @@ for step in trajectory:
 
 T = len(trajectory)
 x = zeros( len(trajectory) , float )
-counter = -1
 
 #  we are trying to find C(tau) for the x position of the Oxygen atom on the water molecule
 #  for the average bead position of the oxygen in each bead.
 
+counter = 0
 for step in trajectory:
     universe.setConfiguration(step['configuration'])
+    x[counter] = universe.objectList()[0].atomList()[2].position()[0]
     counter += 1
-    x[counter] = universe.objectList()[1].atomList()[2].position()[0]
 
+print(T)
+print(counter)
+exit()
 C1file=open("C1file-"+str(nmolecules)+"-P-"+str(P)+"-"+label,"w")
 C2file=open("C2file-"+str(nmolecules)+"-P-"+str(P)+"-"+label,"w")
 

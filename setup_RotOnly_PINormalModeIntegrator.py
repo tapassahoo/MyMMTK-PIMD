@@ -31,8 +31,8 @@ if use_cython:
 
 
 compile_args = []
-prefix_user='/home/l2mcgrat/MMTK/'
-include_dirs= [prefix_user+'include/python2.7/',prefix_user+'downloads/path_integrals/Include/',prefix_user+'include']
+prefix_user='/home/tapas/.mmtk/'
+include_dirs= [prefix_user+'include/python2.7/',prefix_user+'src/path_integrals/Include/',prefix_user+'include']
 libraries = []
 macros = []
 
@@ -51,7 +51,7 @@ headers.extend(glob(os.path.join("Include", "MMTK", "*.px[di]")))
 
 #################################################################
 # Check various compiler/library properties
-library_dirs = ['$HOME/MMTK/lib']
+library_dirs = ['$HOME/.mmtk/lib']
 
 libraries = []
 if sysconfig['LIBM'] != '':

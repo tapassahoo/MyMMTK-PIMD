@@ -6,15 +6,17 @@ from Scientific import N
 from Scientific.Statistics import mean, standardDeviation
 from math import sqrt
 from numpy import zeros
-from mbpol import mbpolForceField
+#from mbpol import mbpolForceField
 
 universe = InfiniteUniverse()
 # nanometers
 
 traj = argv[1]
 
+#temperature = 10.0
 temperature = float(traj[traj.find("T")+1:traj.find("P")])
 P = int(traj[traj.find("P")+1:traj.find("R")])
+#P = 4
 nmolecules = int(traj[traj.find("N")+1:traj.find("H")])
 lattice_spacing = float(traj[traj.find("R")+1:traj.find("F")])
 string = str(traj[traj.find("E")+1:traj.find("V")])
@@ -37,7 +39,7 @@ for atom in universe.atomList():
 
 natoms = len(universe.atomList())
 
-universe.setForceField(mbpolForceField(universe))
+#universe.setForceField(mbpolForceField(universe))
 
 #This is the conversion factor to Units of K
 Kper1overcm=11604.505/8065.54445

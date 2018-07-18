@@ -2,3 +2,5 @@
 *.o
 a.out
 *.pyc
+extra/
+RotationalDensityMatrices/

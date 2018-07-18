@@ -1,7 +1,0 @@
-============================================================
-running job 'submitscriptP.sh' (56588)
-on node 'cpu001' in partition 'serial'
-on cluster 'nlogn'
-as 'l2mcgrat' (10017)
-============================================================
-slurmstepd-cpu001: error: *** JOB 56588 ON cpu001 CANCELLED AT 2018-07-12T16:59:49 ***
